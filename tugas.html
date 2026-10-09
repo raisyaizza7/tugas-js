@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoCalculator - Tema Gojek</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gojek: {
+                            green: '#00AA13',
+                            greenDark: '#00880F',
+                            greenLight: '#E6F6E7',
+                            gopay: '#00A5CF',
+                            gopayDark: '#0081A7',
+                            gopayBg: '#EAF7FB',
+                            dark: '#101820',
+                            cardBg: '#FFFFFF',
+                            slate: '#F4F5F7'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Inter & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F4F5F7;
+            color: #101820;
+        }
+
+        /* Custom Range Slider Gojek Style */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #E2E8F0;
+            border-radius: 9999px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            height: 22px;
+            width: 22px;
+            border-radius: 50%;
+            background: #00AA13;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -7px;
+            box-shadow: 0 2px 6px rgba(0, 170, 19, 0.4);
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background: #00880F;
+        }
+
+        /* Toast animation */
+        @keyframes slideUp {
+            from { transform: translateY(100%) translateX(-50%); opacity: 0; }
+            to { transform: translateY(0) translateX(-50%); opacity: 1; }
+        }
+        .toast-animate {
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Result reveal pulse animation */
+        @keyframes highlightPulse {
+            0% { transform: scale(0.98); opacity: 0.8; }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-calculated {
+            animation: highlightPulse 0.4s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-gojek-green selection:text-white">
+
+    <!-- Top Navigation Header (Gojek Brand Style) -->
+    <header class="w-full bg-gojek-green text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <!-- Branding -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-inner">
+                    <!-- Gojek Icon Style Circle dot -->
+                    <div class="w-6 h-6 rounded-full border-4 border-gojek-green flex items-center justify-center">
+                        <div class="w-2 h-2 rounded-full bg-gojek-green"></div>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight text-white flex items-center gap-1.5">
+                        GoCalculator
+                    </h1>
+                    <p class="text-[11px] text-green-100 font-medium">Kalkulator Persegi Panjang Gojek Style</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center space-x-2">
+                <button id="resetBtn" title="Reset Data" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-semibold transition-all active:scale-95">
+                    <i class="fa-solid fa-rotate-right text-xs"></i>
+                    <span>Reset</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 py-6 w-full flex-grow space-y-6">
+
+        <!-- STEP 1: INPUT SECTION (TOP) -->
+        <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
+            <h2 class="text-base font-bold text-slate-800 flex items-center gap-2 mb-4">
+                <div class="w-7 h-7 rounded-lg bg-gojek-greenLight text-gojek-green flex items-center justify-center">
+                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                </div>
+                Masukkan Ukuran Persegi Panjang
+            </h2>
+
+            <!-- Quick Chips Preset -->
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Preset Ukuran Cepat</label>
+                <div class="flex flex-wrap gap-2">
+                    <button class="preset-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-gojek-greenLight hover:text-gojek-green transition-all active:scale-95 border border-slate-200" data-p="5" data-l="10">Kecil (5 x 10 m)</button>
+                    <button class="preset-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-gojek-greenLight hover:text-gojek-green transition-all active:scale-95 border border-slate-200" data-p="15" data-l="50">Sedang (15 x 50 m)</button>
+                    <button class="preset-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-gojek-greenLight hover:text-gojek-green transition-all active:scale-95 border border-slate-200" data-p="20" data-l="30">Besar (20 x 30 m)</button>
+                    <button class="preset-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-gojek-greenLight hover:text-gojek-green transition-all active:scale-95 border border-slate-200" data-p="25" data-l="25">Persegi (25 x 25 m)</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+                <!-- Input Panjang -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label for="panjangInput" class="text-sm font-semibold text-slate-700">Panjang (m)</label>
+                        <span class="text-xs font-bold text-gojek-green bg-gojek-greenLight px-2.5 py-0.5 rounded-full" id="panjangBadge">15 m</span>
+                    </div>
+                    <div class="relative">
+                        <input type="number" id="panjangInput" min="0.1" step="any" value="15" 
+                            class="w-full px-4 py-3 rounded-xl border border-slate-300 font-bold text-slate-900 focus:ring-2 focus:ring-gojek-green focus:border-gojek-green outline-none transition-all">
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-semibold">m</span>
+                    </div>
+                    <input type="range" id="panjangSlider" min="1" max="100" value="15" class="w-full">
+                </div>
+
+                <!-- Input Lebar -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label for="lebarInput" class="text-sm font-semibold text-slate-700">Lebar (m)</label>
+                        <span class="text-xs font-bold text-gojek-gopayDark bg-gojek-gopayBg px-2.5 py-0.5 rounded-full" id="lebarBadge">50 m</span>
+                    </div>
+                    <div class="relative">
+                        <input type="number" id="lebarInput" min="0.1" step="any" value="50" 
+                            class="w-full px-4 py-3 rounded-xl border border-slate-300 font-bold text-slate-900 focus:ring-2 focus:ring-gojek-gopay focus:border-gojek-gopay outline-none transition-all">
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-semibold">m</span>
+                    </div>
+                    <input type="range" id="lebarSlider" min="1" max="100" value="50" class="w-full">
+                </div>
+            </div>
+
+            <!-- Prominent HITUNG Button -->
+            <button id="hitungBtn" class="w-full py-4 px-6 bg-gojek-green hover:bg-gojek-greenDark text-white font-extrabold text-lg rounded-full shadow-lg shadow-gojek-green/30 transition-all flex items-center justify-center gap-3 active:scale-95 group">
+                <i class="fa-solid fa-calculator text-xl group-hover:rotate-12 transition-transform"></i>
+                <span>HITUNG HASIL</span>
+            </button>
+        </section>
+
+        <!-- STEP 2: RESULTS SECTION (BOTTOM) -->
+        <section id="resultsSection" class="space-y-6">
+            
+            <!-- GoPay Style Summary Result Card -->
+            <div class="bg-gojek-gopay text-white rounded-2xl p-5 shadow-lg relative overflow-hidden transition-all duration-300" id="gopayCard">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full pointer-events-none"></div>
+                
+                <div class="flex items-center justify-between mb-3 border-b border-white/20 pb-2">
+                    <div class="flex items-center gap-2">
+                        <div class="bg-white text-gojek-gopay px-2 py-0.5 rounded-md font-extrabold text-xs tracking-wider">
+                            GoCalculator
+                        </div>
+                        <span class="text-xs text-blue-100 font-medium">Hasil Perhitungan</span>
+                    </div>
+                    <div class="text-xs font-semibold bg-white/20 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <i class="fa-solid fa-shapes text-xs"></i>
+                        <span id="shapeTypeBadge">Persegi Panjang</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 pt-1">
+                    <!-- Luas Card -->
+                    <div class="bg-white/10 rounded-xl p-3 border border-white/15">
+                        <p class="text-xs text-blue-100 font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-chart-area"></i> Total Luas
+                        </p>
+                        <p class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1">
+                            <span id="topLuas">750</span> <span class="text-sm font-semibold">m²</span>
+                        </p>
+                    </div>
+
+                    <!-- Keliling Card -->
+                    <div class="bg-white/10 rounded-xl p-3 border border-white/15">
+                        <p class="text-xs text-blue-100 font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-border-all"></i> Total Keliling
+                        </p>
+                        <p class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1">
+                            <span id="topKeliling">130</span> <span class="text-sm font-semibold">m</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Visualizer -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-lg bg-gojek-gopayBg text-gojek-gopayDark flex items-center justify-center">
+                            <i class="fa-solid fa-eye text-xs"></i>
+                        </div>
+                        Visualisasi Bentuk
+                    </h2>
+                    <span class="text-xs text-slate-500 font-medium bg-slate-100 px-2.5 py-1 rounded-md">
+                        Skala Otomatis
+                    </span>
+                </div>
+
+                <!-- SVG Canvas -->
+                <div class="w-full h-56 sm:h-60 bg-slate-900 rounded-xl relative flex items-center justify-center p-4 overflow-hidden">
+                    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                    
+                    <svg id="geoSvg" class="w-full h-full relative z-10 transition-all duration-300" viewBox="0 0 400 220">
+                        <rect id="svgShape" x="50" y="30" width="300" height="160" rx="10" 
+                            fill="#00AA13" fill-opacity="0.2" 
+                            stroke="#00AA13" stroke-width="3" 
+                            class="transition-all duration-300" />
+
+                        <text id="svgTextPanjang" x="200" y="20" fill="#E6F6E7" font-size="12" font-weight="700" text-anchor="middle">
+                            Panjang: 15 m
+                        </text>
+                        
+                        <text id="svgTextLebar" x="30" y="110" fill="#EAF7FB" font-size="12" font-weight="700" text-anchor="middle" transform="rotate(-90 30 110)">
+                            Lebar: 50 m
+                        </text>
+
+                        <text id="svgTextLuas" x="200" y="115" fill="#FFFFFF" font-size="15" font-weight="800" text-anchor="middle">
+                            750 m²
+                        </text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Breakdown Rumus & Langkah Pembelajaran -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center">
+                            <i class="fa-solid fa-graduation-cap text-xs"></i>
+                        </div>
+                        Langkah Perhitungan Rumus
+                    </h3>
+                    
+                    <!-- Copy Button -->
+                    <button id="copyBtn" class="flex items-center gap-1.5 text-xs font-bold text-gojek-green bg-gojek-greenLight px-3 py-1.5 rounded-full hover:bg-gojek-green hover:text-white transition-all active:scale-95">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Salin Hasil</span>
+                    </button>
+                </div>
+
+                <div class="space-y-4 text-xs sm:text-sm">
+                    <!-- Luas Breakdown -->
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/60 space-y-1.5">
+                        <div class="flex items-center justify-between text-slate-800 font-bold">
+                            <span>1. Perhitungan Luas</span>
+                            <span class="font-mono text-gojek-green bg-gojek-greenLight px-2 py-0.5 rounded">L = Panjang × Lebar</span>
+                        </div>
+                        <div class="font-mono text-slate-600 pt-1 border-t border-slate-200" id="breakdownLuas">
+                            L = 15 × 50 = <span class="text-gojek-green font-bold">750 m²</span>
+                        </div>
+                    </div>
+
+                    <!-- Keliling Breakdown -->
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/60 space-y-1.5">
+                        <div class="flex items-center justify-between text-slate-800 font-bold">
+                            <span>2. Perhitungan Keliling</span>
+                            <span class="font-mono text-gojek-gopayDark bg-gojek-gopayBg px-2 py-0.5 rounded">K = 2 × (Panjang + Lebar)</span>
+                        </div>
+                        <div class="font-mono text-slate-600 pt-1 border-t border-slate-200" id="breakdownKeliling">
+                            K = 2 × (15 + 50) = 2 × 65 = <span class="text-gojek-gopayDark font-bold">130 m</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+        <p>Ezza's Calculator &copy; 2026. Inspired by Gojek Super-App UI System.</p>
+    </footer>
+
+    <!-- Toast Notification Popup -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-3 rounded-full shadow-xl hidden items-center gap-2 z-50 text-xs font-semibold toast-animate">
+        <i class="fa-solid fa-circle-check text-gojek-green text-sm"></i>
+        <span id="toastMsg">Berhasil disalin!</span>
+    </div>
+
+    <script>
+        // State Application
+        const state = {
+            panjang: 15,
+            lebar: 50,
+            luas: 750,
+            keliling: 130
+        };
+
+        // DOM Elements Selection
+        const el = {
+            panjangInput: document.getElementById('panjangInput'),
+            lebarInput: document.getElementById('lebarInput'),
+            panjangSlider: document.getElementById('panjangSlider'),
+            lebarSlider: document.getElementById('lebarSlider'),
+            panjangBadge: document.getElementById('panjangBadge'),
+            lebarBadge: document.getElementById('lebarBadge'),
+            hitungBtn: document.getElementById('hitungBtn'),
+            gopayCard: document.getElementById('gopayCard'),
+            topLuas: document.getElementById('topLuas'),
+            topKeliling: document.getElementById('topKeliling'),
+            shapeTypeBadge: document.getElementById('shapeTypeBadge'),
+            breakdownLuas: document.getElementById('breakdownLuas'),
+            breakdownKeliling: document.getElementById('breakdownKeliling'),
+            svgShape: document.getElementById('svgShape'),
+            svgTextPanjang: document.getElementById('svgTextPanjang'),
+            svgTextLebar: document.getElementById('svgTextLebar'),
+            svgTextLuas: document.getElementById('svgTextLuas'),
+            resetBtn: document.getElementById('resetBtn'),
+            copyBtn: document.getElementById('copyBtn'),
+            toast: document.getElementById('toast'),
+            toastMsg: document.getElementById('toastMsg')
+        };
+
+        // Helper: Format Number Cleanly
+        function formatNum(num) {
+            if (isNaN(num)) return '0';
+            return Number.isInteger(num) ? num.toString() : parseFloat(num.toFixed(2)).toString();
+        }
+
+        // Show Toast Notification
+        function showToast(message) {
+            el.toastMsg.textContent = message;
+            el.toast.classList.remove('hidden');
+            el.toast.classList.add('flex');
+            
+            setTimeout(() => {
+                el.toast.classList.add('hidden');
+                el.toast.classList.remove('flex');
+            }, 2200);
+        }
+
+        // Synchronize Badges and Sliders without triggering calculation
+        function updateInputUI() {
+            const p = parseFloat(el.panjangInput.value) || 0;
+            const l = parseFloat(el.lebarInput.value) || 0;
+
+            el.panjangBadge.textContent = `${formatNum(p)} m`;
+            el.lebarBadge.textContent = `${formatNum(l)} m`;
+
+            if (p <= 100) el.panjangSlider.value = p;
+            if (l <= 100) el.lebarSlider.value = l;
+        }
+
+        // CORE CALCULATION: Executed ONLY when "Hitung" button is pressed
+        function doCalculate() {
+            const panjang = parseFloat(el.panjangInput.value) || 0;
+            const lebar = parseFloat(el.lebarInput.value) || 0;
+
+            state.panjang = panjang;
+            state.lebar = lebar;
+
+            /* Task 2: Luas = Panjang * Lebar */
+            state.luas = panjang * lebar;
+
+            /* Task 3: Keliling = 2 * (Panjang + Lebar) */
+            state.keliling = 2 * (panjang + lebar);
+
+            // Update Results Cards Below
+            el.topLuas.textContent = formatNum(state.luas);
+            el.topKeliling.textContent = formatNum(state.keliling);
+
+            // Shape Type Detection
+            if (panjang > 0 && lebar > 0) {
+                if (panjang === lebar) {
+                    el.shapeTypeBadge.textContent = 'Persegi Sempurna';
+                } else {
+                    el.shapeTypeBadge.textContent = 'Persegi Panjang';
+                }
+            } else {
+                el.shapeTypeBadge.textContent = 'Persegi Panjang';
+            }
+
+            // Update Educational Formula Breakdown
+            el.breakdownLuas.innerHTML = 
+                `L = ${formatNum(panjang)} × ${formatNum(lebar)} = <span class="text-gojek-green font-bold">${formatNum(state.luas)} m²</span>`;
+            
+            el.breakdownKeliling.innerHTML = 
+                `K = 2 × (${formatNum(panjang)} + ${formatNum(lebar)}) = 2 × ${formatNum(panjang + lebar)} = <span class="text-gojek-gopayDark font-bold">${formatNum(state.keliling)} m</span>`;
+
+            // SVG Canvas Dynamic Shape Updating
+            updateSvgVisualizer(panjang, lebar);
+
+            // Add smooth calculation pulse animation
+            el.gopayCard.classList.remove('animate-calculated');
+            void el.gopayCard.offsetWidth; // trigger reflow
+            el.gopayCard.classList.add('animate-calculated');
+
+            // Smooth scroll to results for mobile users
+            el.gopayCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Render SVG Canvas proportional to dimensions
+        function updateSvgVisualizer(p, l) {
+            const maxW = 280;
+            const maxH = 150;
+            const startX = 60;
+            const startY = 35;
+
+            let w = maxW;
+            let h = maxH;
+
+            if (p > 0 && l > 0) {
+                if (p >= l) {
+                    w = maxW;
+                    h = Math.max(25, Math.min(maxH, (l / p) * maxW));
+                } else {
+                    h = maxH;
+                    w = Math.max(25, Math.min(maxW, (p / l) * maxH));
+                }
+            } else {
+                w = 10;
+                h = 10;
+            }
+
+            const offsetX = startX + (maxW - w) / 2;
+            const offsetY = startY + (maxH - h) / 2;
+
+            el.svgShape.setAttribute('x', offsetX);
+            el.svgShape.setAttribute('y', offsetY);
+            el.svgShape.setAttribute('width', w);
+            el.svgShape.setAttribute('height', h);
+
+            // Labels Position Update
+            el.svgTextPanjang.setAttribute('x', offsetX + w / 2);
+            el.svgTextPanjang.setAttribute('y', Math.max(18, offsetY - 8));
+            el.svgTextPanjang.textContent = `Panjang: ${formatNum(p)} m`;
+
+            el.svgTextLebar.setAttribute('x', Math.max(20, offsetX - 15));
+            el.svgTextLebar.setAttribute('y', offsetY + h / 2);
+            el.svgTextLebar.setAttribute('transform', `rotate(-90 ${Math.max(20, offsetX - 15)} ${offsetY + h / 2})`);
+            el.svgTextLebar.textContent = `Lebar: ${formatNum(l)} m`;
+
+            el.svgTextLuas.setAttribute('x', offsetX + w / 2);
+            el.svgTextLuas.setAttribute('y', offsetY + h / 2 + 5);
+            el.svgTextLuas.textContent = `${formatNum(state.luas)} m²`;
+        }
+
+        // Input Sync Event Listeners
+        el.panjangInput.addEventListener('input', updateInputUI);
+        el.lebarInput.addEventListener('input', updateInputUI);
+
+        el.panjangSlider.addEventListener('input', (e) => {
+            el.panjangInput.value = e.target.value;
+            updateInputUI();
+        });
+
+        el.lebarSlider.addEventListener('input', (e) => {
+            el.lebarInput.value = e.target.value;
+            updateInputUI();
+        });
+
+        // Trigger Calculation ONLY on Button Click
+        el.hitungBtn.addEventListener('click', () => {
+            doCalculate();
+            showToast('Hasil berhasil dihitung!');
+        });
+
+        // Quick Preset Buttons (Updates inputs and automatically calculates)
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const p = btn.getAttribute('data-p');
+                const l = btn.getAttribute('data-l');
+                el.panjangInput.value = p;
+                el.lebarInput.value = l;
+                updateInputUI();
+                doCalculate();
+                showToast(`Preset ${p} x ${l} m dihitung!`);
+            });
+        });
+
+        // Reset Button
+        el.resetBtn.addEventListener('click', () => {
+            el.panjangInput.value = 15;
+            el.lebarInput.value = 50;
+            updateInputUI();
+            doCalculate();
+            showToast('Input dan hasil di-reset.');
+        });
+
+        // Copy Clipboard Button
+        el.copyBtn.addEventListener('click', () => {
+            const summaryText = 
+`--- Ezza's Calculator (Gojek Edition) ---
+Panjang  : ${formatNum(state.panjang)} m
+Lebar    : ${formatNum(state.lebar)} m
+-----------------------------------------
+Luas     : ${formatNum(state.luas)} m²
+Keliling : ${formatNum(state.keliling)} m
+-----------------------------------------`;
+
+            const tempArea = document.createElement('textarea');
+            tempArea.value = summaryText;
+            document.body.appendChild(tempArea);
+            tempArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempArea);
+
+            showToast('Hasil berhasil disalin!');
+        });
+
+        // Initial Calculation on Page Load
+        window.addEventListener('DOMContentLoaded', () => {
+            updateInputUI();
+            doCalculate();
+        });
+    </script>
+</body>
+</html>
